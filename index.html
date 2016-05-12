@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snake DOM</title>
+<style>
+#snake-wrapper { width: 100%; font-family: monospace; text-align: center; }
+#snake { display: inline-block; }
+</style>
+  </head>
+  <body>
+    <div id="snake-wrapper">
+      <pre id="snake">
+      </pre>
+    </div>
+  </body>
+  <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+  <script>
+var container = $('#snake');
+
+var tick = 0;
+
+var alive = true;
+var snake = [{x:3, y:1, d:'>'}, {x:2, y:1, d:'>'}, {x:1, y:1, d:'>'}];
+var dir = '>';
+var speed = 50;
+var movecnt = speed;
+var growing = false;
+var food = {};
+
+function initMap() {
+  w = 20, h = 12;
+  map = new Array(h+2);
+  for (var i = 0; i < h+2; i++) map[i] = new Array(w+2);
+}
+
+function resetMap() {
+  map[0  ][0  ] = '+';
+  map[h+1][0  ] = '+';
+  map[0  ][w+1] = '+';
+  map[h+1][w+1] = '+';
+
+  for (var i = 1; i <= w; i++) map[0][i] = map[h+1][i] = '-';
+  for (var i = 1; i <= h; i++) map[i][0] = map[i][w+1] = '|';
+
+  for (var i = 1; i <= h; i++) for (var j = 1; j <= w; j++) map[i][j] = ' ';
+}
+
+function printSnake() {
+  for (var i = 0; i < snake.length; i++)
+    map[snake[i].y][snake[i].x] = snake[i].d;
+}
+
+function render() {
+  var arr = "";
+  for (var i = 0; i < map.length; i++)
+    arr = arr.concat(map[i].join('')).concat('\n');
+  arr = arr.slice(0, -1);
+  container.text(arr);
+}
+
+function moveSnake() {
+  var head = snake[0];
+  var adv = {x: head.x, y:head.y, d:head.d};
+  if (dir == '>') adv.x++;
+  if (dir == '<') adv.x--;
+  if (dir == '^') adv.y--;
+  if (dir == 'v') adv.y++;
+  adv.d = dir;
+  snake.unshift(adv);
+
+  if (!growing) snake.pop();
+  growing = false;
+
+  if (snake[0].x === w+1 || snake[0].x === 0 ||
+      snake[0].y === h+1 || snake[0].y === 0)
+    alive = false;
+  for (var i = 1; i < snake.length; i++)
+    if (snake[0].x === snake[i].x && snake[0].y === snake[i].y)
+      alive = false;
+}
+
+function createFood() {
+  var pos = [];
+  for (var i = 0; i < w * h; i++) pos.push(i);
+  for (var i = 0; i < snake.length; i++) pos.splice(snake.y*w+snake.x, 1);
+
+  var f = pos[Math.floor(Math.random()*w*h)];
+  food.x = 1+f%w;
+  food.y = 1+f/w;
+}
+
+function loop() {
+  resetMap();
+
+  if (alive) {
+    if (movecnt-- == 0) {
+      moveSnake();
+      movecnt = speed;
+    }
+  }
+
+  printSnake();
+  render();
+
+  tick++;
+}
+
+initMap();
+setInterval(loop, 10);
+
+$('body').keydown(function(e) {
+  if (e.keyCode === 39) dir = '>';
+  if (e.keyCode === 37) dir = '<';
+  if (e.keyCode === 38) dir = '^';
+  if (e.keyCode === 40) dir = 'v';
+});
+  </script>
+</html>
